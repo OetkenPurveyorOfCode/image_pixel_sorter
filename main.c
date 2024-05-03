@@ -16,6 +16,12 @@ typedef struct {
     uint8_t pixel[4];
 } Pixel;
 
+typedef enum {
+    Ordering_LessThan,
+    Ordering_Equal,
+    Ordering_GreaterThan,
+} Ordering;
+
 void print_pixels(Pixel* pixels, size_t len) {
     for (size_t i = 0; i < len; i++) {
         printf("%zu ", pixels[i].index);
@@ -103,6 +109,21 @@ void shuffle_pixels(Pixel* pixels, size_t len) {
     }
 }
 
+Ordering cmp_pixel_by_index(Pixel* a, Pixel* b) {
+    if (a->index < b->index) {
+        return Ordering_LessThan;
+    }
+    else if (a->index == b->index) {
+        return Ordering_Equal;
+    }
+    else {
+        return Ordering_GreaterThan;
+    }
+}
+
+Ordering cmp_pixel_by_value(Pixel* a, Pixel* b) {
+    
+}
 
 int main(int argc, char** argv) {
     if (argc != 2) {
