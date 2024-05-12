@@ -60,13 +60,17 @@ void merge(Pixel* a, size_t len_a, Pixel* b, size_t len_b, Pixel* out) {
 
 static int step = 0;
 static int64_t lasttime = 0;
-void mergesort_impl(struct fenster* f, Pixel* base, size_t base_len, Pixel* pixels, size_t len, Pixel* tmp) {
+int mergesort_impl(struct fenster* f, Pixel* base, size_t base_len, Pixel* pixels, size_t len, Pixel* tmp) {
     if (len <= 1) {
-        return;
+        return 0;
     }
     else {
-        mergesort_impl(f, base, base_len, pixels+0, len/2, tmp);
-        mergesort_impl(f, base, base_len, pixels+len/2, len-len/2, tmp);
+        if (mergesort_impl(f, base, base_len, pixels+0, len/2, tmp) == -1) {
+            return -1;
+        }
+        if (mergesort_impl(f, base, base_len, pixels+len/2, len-len/2, tmp) == -1) {
+            return -1;
+        }
         merge(pixels+0, len/2, pixels+len/2, len-len/2, tmp);
         size_t last_it = 0;
         for (size_t it = 0; it < len; it++) {
@@ -84,7 +88,10 @@ void mergesort_impl(struct fenster* f, Pixel* base, size_t base_len, Pixel* pixe
                     int64_t duration = lasttime - fenster_time();
                     fenster_sleep(16-duration);
                     lasttime = fenster_time();
-                    fenster_loop(f);
+                    if (fenster_loop(f) == -1) {
+                        printf("wwww");
+                        return -1;
+                    }
                 }
                 step += 1;
                 step %= base_len / 500;
@@ -92,12 +99,16 @@ void mergesort_impl(struct fenster* f, Pixel* base, size_t base_len, Pixel* pixe
         }
         
     }
+    return 0;
 }
 
-void mergesort(struct fenster* f, Pixel* pixels, size_t len) {
+int mergesort(struct fenster* f, Pixel* pixels, size_t len) {
     Pixel* tmp = malloc(sizeof(Pixel)*len);
-    mergesort_impl(f, pixels, len, pixels, len, tmp);
+    if (mergesort_impl(f, pixels, len, pixels, len, tmp) == -1) {
+        return -1;
+    }
     free(tmp);
+    return 0;
 }
 
 void shuffle_pixels(Pixel* pixels, size_t len) {
@@ -153,7 +164,9 @@ int main(int argc, char** argv) {
                 fenster_pixel(&f, i, j) = pixel;
             } 
         }
-        mergesort(&f, pixels, width*height);
+        if (mergesort(&f, pixels, width*height) != 0) {
+            break;
+        }
         for(int i = 0; i < f.width; i++) {
             for (int j = 0; j < f.height; j++) {
                 uint32_t pixel = pixels[j*f.width+i].pixel[0] << 16 | pixels[j*f.width+i].pixel[1] <<8 | pixels[j*f.width+i].pixel[2];
